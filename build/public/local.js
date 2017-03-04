@@ -1,5 +1,5 @@
 var autoplay = function () {
-    var canvas = $('<canvas style="position: fixed; z-index: 1001;top: 10px; right: 10px; opacity: 0.9">').get(0), context = canvas.getContext('2d'), video = document.createElement('video'), fist_pos_old, detector;
+    var canvas = $('<canvas style="position: fixed; z-index: 1001;top: 10px; right: 10px; opacity: 0.9">').get(0), context = canvas.getContext('2d'), video = document.createElement('video'), fist_pos_old = [], detector;
     document.getElementsByTagName('body')[0].appendChild(canvas);
     try {
         compatibility.getUserMedia({ video: true }, function (stream) {
@@ -11,11 +11,11 @@ var autoplay = function () {
             }
             compatibility.requestAnimationFrame(play);
         }, function (error) {
-            alert("WebRTC not available");
+            console.log("WebRTC not available");
         });
     }
     catch (error) {
-        alert(error);
+        console.log(error);
     }
     function play() {
         compatibility.requestAnimationFrame(play);
@@ -42,24 +42,39 @@ var autoplay = function () {
                     if (coords[i][4] > coord[4])
                         coord = coords[i];
                 var fist_pos = [coord[0] + coord[2] / 2, coord[1] + coord[3] / 2];
-                if (fist_pos_old) {
-                    var dx = (fist_pos[0] - fist_pos_old[0]) / video.videoWidth, dy = (fist_pos[1] - fist_pos_old[1]) / video.videoHeight;
+                var oldPos = getLastFistPos(fist_pos_old);
+                if (oldPos) {
+                    var dx = (fist_pos[0] - oldPos[0]) / video.videoWidth, dy = (fist_pos[1] - oldPos[1]) / video.videoHeight;
                     window.scrollBy(dx * 200, dy * 200);
                 }
-                else
-                    fist_pos_old = fist_pos;
+                fist_pos_old.unshift(fist_pos);
                 context.beginPath();
                 context.lineWidth = '2';
                 context.fillStyle = 'rgba(0, 255, 255, 0.5)';
                 context.fillRect(coord[0] / video.videoWidth * canvas.clientWidth, coord[1] / video.videoHeight * canvas.clientHeight, coord[2] / video.videoWidth * canvas.clientWidth, coord[3] / video.videoHeight * canvas.clientHeight);
                 context.stroke();
             }
-            else
-                fist_pos_old = null;
+            ;
         }
     }
+    function getLastFistPos(pos) {
+        var end = 10;
+        if (!pos[end])
+            return null;
+        var sumX = 0;
+        var sumY = 0;
+        var minusLength = 3;
+        var i = end - minusLength + 1;
+        for (; i <= end; i++) {
+            sumX += pos[i][0];
+            sumY += pos[i][1];
+        }
+        return [Math.round(sumX / minusLength), Math.round(sumY / minusLength)];
+    }
 };
-document.getElementById('link').href = 'javascript:(' + autoplay.toString() + ')()';
+document.getElementById('link').addEventListener('click', function () {
+    autoplay();
+});
 var Util = {
     getObjectHash: function (object, string, pattern) {
         return string.split(pattern || /(\[|\].?)/).reduce(function (obj, next) {

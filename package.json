@@ -5,11 +5,13 @@
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
     "gulp-concat": "^2.6.1",
-    "gulp-copy": "^1.0.0",
+    "gulp-pug": "^3.2.0",
+    "gulp-stylus": "^2.6.0",
     "gulp-typescript": "^3.1.4",
     "gulp-watch": "^4.3.11",
     "gulp-webserver": "^0.9.1",
     "merge2": "^1.0.3",
+    "nib": "^1.1.2",
     "run-sequence": "^1.2.2",
     "typescript": "^2.1.6"
   }

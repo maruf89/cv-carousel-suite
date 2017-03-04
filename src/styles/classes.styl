@@ -1,0 +1,193 @@
+.wrapper,
+section[class*="inner-"],
+div[class*="inner-"]
+    @extends _full-size
+
+.wrapper,
+[class*="-wrap"]
+    position relative
+    @extends _clearfix
+
+    +media('sm')
+        height 100%
+
+.no-m/*argin*/
+    margin 0 !important
+
+.no-p/*adding*/
+    padding 0 !important
+
+.no-n/*othing*/
+    margin 0 !important
+    padding 0 !important
+
+.cta-color
+    color $cta-color !important
+
+.inherit-link
+    text-decoration underline
+    cursor pointer
+    color inherit
+
+.space:before
+    content ' '
+
+/**
+ * This class cancels out how twitter bootstrap centers columns
+ */
+[class*='col-'].col-center
+    float none
+    margin-left auto
+    margin-right auto
+
+a.a
+    color $cta-color
+
+    .no-touch &:hover
+        text-decoration underline
+
+.styled-link,
+.reverse-link
+    font 1em $font-italic-val
+    text-decoration underline
+    cursor pointer
+    color $blue-2
+
+.inherit-link,
+.styled-link,
+.reverse-link
+    .no-touch &:hover
+        color $green
+
+a.no-default
+    text-decoration none
+    color $blue-2
+
+// swaps the color/hover state of the default styles
+.reverse-link
+    color $green
+
+    .no-touch &:hover
+        color $blue-fade
+
+.right-align
+    text-align right
+
+.left-align
+    text-align left
+
+.center-align
+    text-align center
+
+.hidden
+    display none !important
+
+.show,
+.block
+    display block !important
+
+.show-inline,
+.inline
+    display inline !important
+
+.show-inline-block,
+.inline-block
+    display inline-block !important
+    
+.no-cap
+    text-transform none !important
+
+.cap
+    text-transform capitalize !important
+
+p.indent
+    text-indent 1em
+
+.clear,
+.clearfix
+    @extends _clearfix
+
+.relative
+    position relative
+
+.top-align
+    vertical-align top
+    display inline-block
+
+.middle-align
+    vertical-align middle
+    display inline-block
+
+.bot-align
+    vertical-align bottom
+    display inline-block
+
+.no-margin
+    margin 0 !important
+
+.no-padding
+    padding 0 !important
+
+.height-100
+    height 100%
+
+.pw-15
+    width 15%
+
+.pw-20
+    width 20%
+
+.pw-25
+    width 25%
+
+.pw-30
+    width 30%
+
+.pw-40
+    width 40%
+
+.pw-50
+    width 50%
+    
+.pw-75
+    width 75%
+
+.pw-80
+    width 80%
+
+.pw-100
+    width 100%
+        
+.small-block
+    width 100%
+    height em(30)
+    
+.med-block
+    width 100%
+    height em(65)
+    
+.big-block
+    width 100%
+    height em(130)
+            
+.invisible
+    visibility hidden
+
+.visible-on-hover:hover
+    visibility visible
+    
+    .invisible
+        visibility visible
+        
+// General reused styles
+.styled-text-line
+    font em(18) \/ 2.5em $font-alternate
+    opacity .7
+    
+.styled-text-line-alt
+    font em(18) \/ 2.5em $font-alternate
+
+
+
+
+

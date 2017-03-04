@@ -6,7 +6,7 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "outFile": "build/src/local.js",
+        "outFile": "local.js",
         "sourceMap": false,
         "watch": true,
         "experimentalDecorators": true,
