@@ -2,8 +2,8 @@
 
 var autoplay = function() {
     var canvas:any = $('<canvas style="position: fixed; z-index: 1001;top: 10px; right: 10px; opacity: 0.9">').get(0),
-        context = canvas.getContext('2d'),
-        video = document.createElement('video'),
+        context:any = canvas.getContext('2d'),
+        video:HTMLVideoElement = document.createElement('video'),
         fist_pos_old:number[][] = [],
         detector:any;
  

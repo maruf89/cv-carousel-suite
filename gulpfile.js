@@ -8,8 +8,14 @@ var runSequence = require('run-sequence');
 var clean = require('gulp-clean');
 var stylus = require('gulp-stylus');
 var pug = require('gulp-pug');
+var gutil = require("gulp-util");
 
 var nib = require('nib');
+var webpack = require("webpack");
+var webpackConfig = require("./webpack.config.js");
+var myDevConfig = Object.create(webpackConfig);
+var devCompiler = webpack(myDevConfig);
+
 
 const DIVIDE = '/';
 
@@ -82,7 +88,7 @@ gulp.task('views', function () {
 });
 
 gulp.task('watch', function() {
-    gulp.watch(LOCAL_SCRIPTS, ['scripts']);
+    gulp.watch(LOCAL_SCRIPTS, ["webpack:build-dev"]);
     gulp.watch(p(SRC, LOCAL, ALL_FILES(_PUG)), ['views'])
 
     // copy Stylus to 
@@ -115,10 +121,21 @@ gulp.task('stylus', function () {
         .pipe(gulp.dest(p(BUILD, PUBLIC)))
 });
 
+gulp.task("webpack:build-dev", function(callback) {
+	// run webpack
+	devCompiler.run(function(err, stats) {
+		if(err) throw new gutil.PluginError("webpack:build-dev", err);
+		gutil.log("[webpack:build-dev]", stats.toString({
+			colors: true
+		}));
+		callback();
+	});
+});
+
 gulp.task('dev', function () {
     runSequence(
         'clean',
-        ['copy', 'copy:css', 'views', 'scripts'],
+        ['copy', 'copy:css', 'views', "webpack:build-dev"],
         'stylus',
         ['watch', 'webserver']
     )
