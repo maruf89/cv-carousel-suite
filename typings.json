@@ -2,5 +2,8 @@
   "globalDependencies": {
     "jquery": "registry:dt/jquery#1.10.0+20170123093700",
     "three-canvasrenderer": "registry:dt/three-canvasrenderer#0.0.0+20160916163606"
+  },
+  "dependencies": {
+    "lodash": "registry:dt/lodash#4.14.0+20170302013423"
   }
 }

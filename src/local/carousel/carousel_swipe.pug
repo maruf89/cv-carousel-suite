@@ -7,17 +7,15 @@ html(lang='en')
     link(href="/public/main.css", rel="stylesheet")
 
   body.p-carousel
-    h1 Carousel Swipe
-    p
-        a#link(href="#") Start Sarousel Swiping
+    h1(style="margin-left:5em") Carousel Swipe
 
-    video#videoStream.tracker-canvas
-    canvas#trackerCanvas.tracker-canvas
+    video#videoStream.old-tracker-canvas.hidden
+    canvas#trackerCanvas.old-tracker-canvas
 
-    button#stopButton.fixed-top-left(type="button") Stop Video!
+    button#stopButton.fixed-top-left(type="button") Toggle Video!
 
     #scrolling
-        ul
+        ul#scrollContent
             li Swipe
             li Scroll
             li Pigs
@@ -25,8 +23,9 @@ html(lang='en')
     
     script(src='/public/thirdparty/compatibility.js')
     script(src='/public/thirdparty/js-objectdetect/objectdetect.js')
-    script(src='/public/thirdparty/js-objectdetect/objectdetect.handfist.js')
-    script(src='/public/thirdparty/js-objectdetect/objectdetect.handopen.js')
+    //- script(src='/public/thirdparty/js-objectdetect/objectdetect.handopen.js')
+    //- script(src='/public/thirdparty/js-objectdetect/objectdetect.handfist.js')
+    script(src='/public/thirdparty/js-objectdetect/objectdetect.eye.js')
     script(src='/public/thirdparty/jquery.js')
     script(src='/public/thirdparty/itemslide/itemslide.js')
     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.12/jquery.mousewheel.min.js")
