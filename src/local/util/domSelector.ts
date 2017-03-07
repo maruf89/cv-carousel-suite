@@ -1,4 +1,4 @@
-export default function $ (selector:string, el:Element):Element {
+export function $ (selector:string, el:Element):Element {
     return (el || document).querySelector(selector)
 }
 

@@ -6,13 +6,11 @@ export function generateRainbowHex(i:number, frequency:number):string {
     return RGB2Color(red,green,blue);
 }
 
-export function generateRandomRGBA(opacity:number = 1, i:number, frequency:number):string {
-    let red:number   = Math.sin(frequency*i + 0) * 127 + 128;
-    let green:number = Math.sin(frequency*i + 2) * 127 + 128;
-    let blue:number  = Math.sin(frequency*i + 4) * 127 + 128;
+export function generateRGBA(opacity:number = 1, i:number, frequency:number):string {
+    let red:number   = Math.floor(Math.sin(frequency*i + 0) * 127 + 128);
+    let green:number = Math.floor(Math.sin(frequency*i + 2) * 127 + 128);
+    let blue:number  = Math.floor(Math.sin(frequency*i + 4) * 127 + 128);
 
-    // return 'rgba(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + opacity + ')';
-    console.log(`randomColor: rgba(${red}, ${green}, ${blue}, ${opacity})`);
     return `rgba(${red}, ${green}, ${blue}, ${opacity})`
 }
 

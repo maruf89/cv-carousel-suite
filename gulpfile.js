@@ -16,7 +16,6 @@ var webpackConfig = require("./webpack.config.js");
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
 
-
 const DIVIDE = '/';
 
 const SRC = 'src';
@@ -83,7 +82,7 @@ gulp.task('copy:css', function () {
 
 gulp.task('views', function () {
     return gulp.src(p(SRC, LOCAL, ALL_FILES(_PUG)), { base: SRC })
-        .pipe(pug())
+        .pipe(pug({ pretty:true, basedir: __dirname + '/src/local' }))
         .pipe(gulp.dest(p(BUILD)))
 });
 

@@ -3,7 +3,7 @@
 export class Scanner implements scanner {
     protected _restraints:CoordDimen;
     protected _trigger:ScannerDimen; // the dimens a coord must match to trigger a spawn
-    protected _restrainsAsXYCoordinates:CoordDouble;
+    protected _coordDouble:CoordDouble;
 
     constructor(trigger:ScannerDimen, restraints:CoordDimen) {
         this._trigger = trigger;
@@ -17,7 +17,7 @@ export class Scanner implements scanner {
      * @param coord
      */
     public matchesRule(coord:Coordinate):boolean {       
-        let coordDouble:CoordDouble = this._restrainsAsXYCoordinates;
+        let coordDouble:CoordDouble = this._coordDouble;
 
         let doesMatch:boolean =  coord.x > coordDouble.x1 && coord.x < coordDouble.x2 &&
                                  coord.y > coordDouble.y1 && coord.y < coordDouble.y2;
@@ -38,7 +38,7 @@ export class Scanner implements scanner {
         let startX:number = rule.x ? rule.x * dimens.width : 0;
         let startY:number = rule.y ? rule.y * dimens.height : 0;
 
-        this._restrainsAsXYCoordinates = {
+        this._coordDouble = {
             x1: startX,
             x2: rule.width ? startX + rule.width * dimens.width : dimens.width,
             y1: startY,
@@ -48,6 +48,10 @@ export class Scanner implements scanner {
 
     public getRule():ScannerDimen {
         return this._trigger;
+    }
+
+    protected getCoordinates():CoordDouble {
+        return this._coordDouble;
     }
 
     public getName():string {

@@ -6,8 +6,13 @@ import {TaskTracker} from './TaskTracker';
 import {coordDimenToCenterCoord} from '../util/coord';
 
 export class TaskBucketKeeper implements task_bucket_keeper {
-    private _scanners:task_formula[] = [];
+    private _formulas:task_formula[] = [];
+    private _formulaLen:number = 0;
     private _trackerBucket:task_tracker[] = [];
+
+    // an starting reference restraint that will increment
+    // as a certain tasks' confidence goes above this starting amount
+    private _confidenceRoof:number = 20;
 
     /**
      * This represents the up to date dimensions of the detecting page
@@ -21,15 +26,11 @@ export class TaskBucketKeeper implements task_bucket_keeper {
     
     constructor(canvasDimensions:CoordDimen, options?:TaskBucketOptions) {
         this.trackDimens = canvasDimensions || this.trackDimens;
-
-        let that = this;
-        setInterval(function () {
-            console.log(`Tracker Bucket Len: ${that._trackerBucket.length}`);
-        }, 1000);
     }
 
     public addNewFormula(formula:task_formula):void {
-        this._scanners.push(formula);
+        this._formulas.push(formula);
+        this._formulaLen++;
     }
 
     public trackCoordinate(coord:CoordDimen, trackerCreator:(coord:CoordDimen, formula:task_formula) => task_tracker):task_tracker|null {
@@ -58,7 +59,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
 
         // if it didn't match any existing trackers, see if it matches a new starting point
         if (!matchedTracker) {
-            _.some(this._scanners, function doesMatchScanner (formula:task_formula) {
+            _.some(this._formulas, function doesMatchScanner (formula:task_formula) {
                 if (formula.testForNewTask(centerCoord)) {
                     matchedTracker = trackerCreator(coord, formula);
 
@@ -73,7 +74,13 @@ export class TaskBucketKeeper implements task_bucket_keeper {
         }
 
         if (matchedTracker) {
-            matchedTracker.growNutrients(centerCoord);
+            let trackerConfidence:number = matchedTracker.growNutrients(centerCoord);
+
+            // if (window._debug && trackerConfidence > this._confidenceRoof) {
+            //     console.log(`Raising confidenceRoof to ${trackerConfidence}`);
+            // }
+            
+            // this._confidenceRoof = Math.max(trackerConfidence, this._confidenceRoof);
         }
 
         return matchedTracker;
@@ -90,6 +97,42 @@ export class TaskBucketKeeper implements task_bucket_keeper {
             if (this._trackerBucket[j].decay()) {
                 // if so, remove it from the bucket
                 this._trackerBucket.splice(j, 1);
+            }
+        }
+    }
+
+    public decayAndGetDecaying():task_tracker[] {
+        var len:number = this._trackerBucket.length;
+
+        // check if we have anything to decay
+        if (!len) return null;
+
+        let decaying:task_tracker[] = [];
+
+        for (let j:number = len - 1; j >= 0; j--) {
+            // Rot the tracker and see if it dies
+            if (this._trackerBucket[j].decay()) {
+                // if so, remove it from the bucket
+                this._trackerBucket.splice(j, 1);
+            } else {
+                decaying.push(this._trackerBucket[j]);
+            }
+        }
+
+        return decaying;
+    }
+
+    public getTrackerConfidencePercent(tracker:task_tracker):number {
+        let confidence = tracker.getConfidence();
+
+        return Math.max(confidence / this._confidenceRoof, .5);
+    }
+
+    public drawTriggerZones():void {
+        for (let i = 0; i < this._formulaLen; i++) {
+            let formula:task_formula = this._formulas[i];
+            if (formula.canvasZone) {
+                formula.canvasZone.drawZone();
             }
         }
     }

@@ -2,7 +2,7 @@
 
 import * as _ from 'lodash';
 
-import {generateRandomRGBA} from '../util/color';
+import {generateRGBA} from '../util/color';
 import {coordDimenToCenterCoord} from '../util/coord';
 
 export class TaskTracker implements task_tracker {
@@ -17,7 +17,6 @@ export class TaskTracker implements task_tracker {
             y: 0
         },
         maxDecay: 10,
-        onComplete: null
     }
 
     // how confident we are that we'll make it to the end
@@ -44,10 +43,6 @@ export class TaskTracker implements task_tracker {
         trackerDimens:CoordDimen,
         options:TaskTrackerOptions
     ) {
-        if (!options || typeof options.onComplete !== 'function') {
-            throw new Error("Options must be set and have #onComplete callback")
-        }
-
         // plant the seed…
         this.growNutrients(startCoord);
 
@@ -106,9 +101,10 @@ export class TaskTracker implements task_tracker {
 
     /**
      * Ensures the growth of this tracker - "2 steps forward…"
-     * @param coord 
+     * @param coord
+     * @returns number - current confidence
      */
-    public growNutrients(coord:Coordinate):void {
+    public growNutrients(coord:Coordinate):number {
         // add the last center coord to the stack
         this._history.unshift(coord);
 
@@ -117,7 +113,7 @@ export class TaskTracker implements task_tracker {
         this.decayAmt = -1;
 
         // and build confidence, your journey will be long and hard young padawan…
-        this._confidence++;
+        return ++this._confidence;
     }
 
     /**
@@ -162,10 +158,14 @@ export class TaskTracker implements task_tracker {
      */
     private _trackerCompleted():void {
         this._completed = true;
-        this._options.onComplete(this._formula, this);
+        this._formula.getCallback()(this._formula, this);
     }
 
     public isCompleted():boolean {
         return this._completed;
+    }
+
+    public getConfidence():number {
+        return this._confidence;
     }
 }

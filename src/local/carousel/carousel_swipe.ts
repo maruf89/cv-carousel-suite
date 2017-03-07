@@ -2,7 +2,7 @@
 
 import {$id} from '../util/domSelector';
 import {loadCamera} from '../util/camera';
-import {generateRandomRGBA} from '../util/color';
+import {generateRGBA} from '../util/color';
 import {arrayToCoordDimen} from '../util/coord';
 import {CanvasZone} from '../modules/CanvasZone';
 import {TaskBucketKeeper} from '../modules/TaskBucketKeeper';
@@ -22,10 +22,16 @@ const canvasRestraints:CoordDimen = {
     height: 100
 };
 
+var pageCarousel:any;
+
 const pageData:PageData = {
     bucket: null,
     video: null,
-    canvas: null,
+    canvas: {
+        context: null,
+        $elem: null,
+        $video: null
+    },
     history: [],
     detector: null,
     doDetect: false,
@@ -34,7 +40,8 @@ const pageData:PageData = {
         historyLength: 10,
         minConfidence: .3,
         relatedBoxDistance: 25,
-        zoneDistance: .5
+        zoneDistance: .75, // where the start/end trigger zones should start from the right & left edges
+        taskColorIndex: 0,
     },
     adjustConfidence: function (posMatch:boolean):void {
         this.confidenceCnt += posMatch ? 1 : -1;
@@ -60,14 +67,14 @@ window.onload = function () {
 }
 
 function startCarousel () {
-    let carousel = $("ul");
+    pageCarousel = $("ul");
 
-    carousel.itemslide({
+    pageCarousel.itemslide({
 
     });
 
     $(window).resize(function () {
-        carousel.reload();
+        pageCarousel.reload();
     });
 }
 
@@ -81,6 +88,15 @@ function startCamera () {
         ratio: 0,
         stream: null
     }
+
+    // Init canvas here as well with CanvasZone
+    let $canvas = pageData.canvas.$elem = <HTMLCanvasElement>$id('trackerCanvas');
+    pageData.canvas.context = $canvas.getContext('2d');
+
+    /* Draw video overlay: */
+    $canvas.width = canvasRestraints.width;
+    $canvas.height = canvasRestraints.height;
+    
     pageData.history = [];
 
     loadCamera(pageData.video.$elem).then(function (stream:MediaStream) {
@@ -100,15 +116,8 @@ function startCamera () {
             width: canvasRestraints.width,
             height: canvasRestraints.height
         }, { zoneGoalDistanceX: pageData.options.zoneDistance });
-        defineTaskBucketZones(pageData.bucket);
 
-        // Init canvas here as well with CanvasZone
-        let $canvas = <HTMLCanvasElement>$id('trackerCanvas');
-
-        /* Draw video overlay: */
-        $canvas.width = canvasRestraints.width;
-        $canvas.height = canvasRestraints.height;
-        pageData.canvas = new CanvasZone($canvas, <CanvasRenderingContext2D>$canvas.getContext('2d'), this, pageData.options.zoneDistance);
+        defineTaskBucketZones(pageData.bucket, $canvas, pageData.canvas.context, this);
 
         if (pageData.video.stream) startTracker(pageData);
     }, false);
@@ -118,9 +127,8 @@ function startCamera () {
 
 /**
  * Business Logic - defines bucket watch trigger zones
- * @param bucket 
  */
-function defineTaskBucketZones(bucket:task_bucket_keeper):void {
+function defineTaskBucketZones(bucket:task_bucket_keeper, $canvas:HTMLCanvasElement, context:CanvasRenderingContext2D, $video:HTMLVideoElement):void {
     let halvedDistance:number = pageData.options.zoneDistance / 2; // split field in half
 
     let leftSide:ScannerDimen = {
@@ -139,8 +147,38 @@ function defineTaskBucketZones(bucket:task_bucket_keeper):void {
         name: "rightSide"
     };
 
-    bucket.addNewFormula(new TaskFormula(leftSide, [rightSide], canvasRestraints, 'Left TOO Right'));
-    bucket.addNewFormula(new TaskFormula(rightSide, [leftSide], canvasRestraints, 'Right -> 2 -> Left'));
+    let formula:task_formula = new TaskFormula({
+        trigger: leftSide,
+        followTriggers: [rightSide],
+        restraints: canvasRestraints,
+        name: 'Left TOO Right',
+        onComplete: function (formula:task_formula, tracker:task_tracker) {
+            log(formula, tracker);
+            pageCarousel.next();
+        }
+    });
+
+    formula.drawTriggerZone(context);
+    bucket.addNewFormula(formula);
+
+    formula = new TaskFormula({
+        trigger: rightSide,
+        followTriggers: [leftSide],
+        restraints: canvasRestraints,
+        name: 'Right -> 2 -> Left',
+        onComplete: function (formula:task_formula, tracker:task_tracker) {
+            console.log('scroll left');
+            log(formula, tracker);
+            pageCarousel.previous();
+        }
+    });
+
+    formula.drawTriggerZone(context);
+    bucket.addNewFormula(formula);
+
+    function log(formula:task_formula, tracker:task_tracker):void {
+        console.warn(`${formula.toString()} - ${tracker.historyToString()}`);
+    }
 }
 
 function startTracker(data:PageData):void {
@@ -161,14 +199,15 @@ function play(data:PageData, closure:Function):void {
     
     /* Prepare the detector once the video dimensions are known: */
     if (!data.detector) {
-        var width = ~~(100 * data.video.ratio);
-        var height = 100;
-        data.detector = new objectdetect.detector(width, height, 1.1, objectdetect.eye);
+        var width = canvasRestraints.width;
+        var height = canvasRestraints.height;
+        data.detector = new objectdetect.detector(width, height, 1.1, objectdetect.handfist);
     }
 
     data.canvas.context.drawImage(data.video.$elem, 0, 0, data.canvas.$elem.clientWidth, data.canvas.$elem.clientHeight);
 
-    data.canvas.drawZones();
+    // draws the start trigger points
+    data.bucket.drawTriggerZones();
     
     var coords:number[][] = data.detector.detect(data.video.$elem, 1);
     
@@ -180,23 +219,24 @@ function play(data:PageData, closure:Function):void {
         }
     }
 
-    data.bucket.decay();
+    let decaying:task_tracker[] = data.bucket.decayAndGetDecaying();
+    if (decaying) {
+        _.each(decaying, function (tracker:task_tracker) {
+            drawTracker(tracker, pageData);
+        })
+    }
 }
 
 function createTaskTracker(startCoords:CoordDimen, formula:task_formula):task_tracker {
     let tracker:task_tracker =  new TaskTracker(startCoords, formula, canvasRestraints, {
-        scannerConstructor: Scanner,
-        onComplete: taskOnComplete
+        scannerConstructor: Scanner
     });
 
-    tracker.data.trackerColor = '#9ce0e0'; //generateRandomRGBA(.85, Math.random() * 256, 1);
+    tracker.data.trackerColor = generateRGBA(pageData.bucket.getTrackerConfidencePercent(tracker), pageData.options.taskColorIndex++, 1);
+    tracker.data.isNew = 25;
     console.log(`Creating new formula: ${formula.toString()}`);
 
     return tracker;
-}
-
-function taskOnComplete(formula:task_formula, tracker:task_tracker):void {
-    console.warn(`${formula.toString()} - ${tracker.historyToString()}`)
 }
 
 function drawTracker(tracker:task_tracker, data:PageData):void {
@@ -206,124 +246,18 @@ function drawTracker(tracker:task_tracker, data:PageData):void {
     /* Draw coordinates on video overlay: */
     data.canvas.context.beginPath();
     data.canvas.context.lineWidth = 2;
-    data.canvas.context.fillStyle = tracker.data.trackerColor
-    data.canvas.context.fillRect(
-        (coord.x - sizeRadius),
-        (coord.y - sizeRadius),
-        (sizeRadius * 2),
-        (sizeRadius * 2)
-    );
-    data.canvas.context.stroke();
-}
 
-function drawCanvasTrackings(index:number, incomingCoords:number[], data:PageData):void {
-    var coord:number[] = incomingCoords;
-    data.history[index] = data.history[index] || [];
-
-    /* Rescale coordinates from detector to video coordinate space: */
-    let scaleX:number = data.video.width / data.canvas.$elem.width;
-    let scaleY:number = data.video.height / data.canvas.$elem.height;
-    coord[0] *= scaleX;
-    coord[1] *= scaleY;
-    coord[2] *= scaleX;
-    coord[3] *= scaleY;
-    
-    // add to all positions
-    let newCoord:Coordinate = calculateCenter(coord);
-    let newCoordOrNull:Coordinate|null = relatedCoordinateOrNull(newCoord, data.history[index], data.options);
-
-    // only add if not null
-    if (newCoordOrNull) data.history[index].unshift(newCoordOrNull);
-
-    data.adjustConfidence(!!newCoordOrNull);
-    data.resizeHistoryIndex(index);
-
-    let delta:CoordinateDelta = calculatePositionDelta(data.history[index], data.options);
-    console.debug(delta);
-    if (delta) {
-        // var dx = (fist_pos[0] - oldPos[0]) / data.video.videoWidth,
-        //         dy = (fist_pos[1] - oldPos[1]) / data.video.videoHeight;
-        
-        $scrollable.style.transform = `translate3d(${delta.dx * 200}, 0px, 0px)`;
-    } else return;
-    
-    /* Draw coordinates on video overlay: */
-    data.canvas.context.beginPath();
-    data.canvas.context.lineWidth = 2;
-    data.canvas.context.fillStyle = generateRandomRGBA(.5, index * 4, .4);
-    data.canvas.context.fillRect(
-        coord[0] / data.video.width * data.canvas.$elem.clientWidth,
-        coord[1] / data.video.height * data.canvas.$elem.clientHeight,
-        coord[2] / data.video.width * data.canvas.$elem.clientWidth,
-        coord[3] / data.video.height * data.canvas.$elem.clientHeight);
-    data.canvas.context.stroke();
-}
-
-function calculateCenter(coord:number[]):Coordinate {
-    return {
-        x: coord[0] + coord[2] / 2, // X coord + half of width
-        y: coord[1] + coord[3] / 2
-    };
-}
-
-function relatedCoordinateOrNull(coord:Coordinate, coordHistory:Coordinate[], options:TrackingOptions):Coordinate|null {
-    let hasNone:boolean = true;
-    
-    if (_.some(coordHistory, function (coordI:Coordinate) {
-        // check if we have anything in the history in the first place
-        hasNone = hasNone && !coordI;
-
-        return coordI &&
-            Math.abs(coordI.x - coord.x) <= options.relatedBoxDistance &&
-            Math.abs(coordI.y - coord.y) <= options.relatedBoxDistance;
-    })) {
-        return coord;
+    if (typeof tracker.data.isNew === 'number' && --tracker.data.isNew <= 0) {
+        data.canvas.context.fillStyle = tracker.data.trackerColor
+        data.canvas.context.fillRect(
+            (coord.x - sizeRadius),
+            (coord.y - sizeRadius),
+            (sizeRadius * 2),
+            (sizeRadius * 2)
+        );
     }
     
-    // if we have an empty history, return the first coord
-    return hasNone ? coord : null;
-}
-
-function calculatePositionDelta(coords:Coordinate[], options:TrackingOptions):CoordinateDelta {
-    let len:number = coords.length;
-    
-    if (len < options.historyLength * options.minConfidence) return null;
-
-    let middle:number = Math.floor(len / 2);
-    let startCoords:Coordinate[] = coords.slice(0, middle);
-    let endCoords:Coordinate[] = coords.slice(middle);
-
-    let start:Coordinate = addUp(startCoords, middle);
-    let end:Coordinate = addUp(endCoords, len - middle);
-
-    function addUp(crds:Coordinate[], crdLen:number):Coordinate {
-        let sumX:number = 0;
-        let sumY:number = 0;
-        let index = crdLen - 1;
-
-        while (index >= 0) {
-            let coord:Coordinate = crds[index--];
-            sumX += coord.x;
-            sumY += coord.y;
-        }
-
-        return {
-            x: Math.round(sumX / crdLen),
-            y: Math.round(sumY / crdLen)
-        };
-    }
-
-    // let delta:CoordinateDelta = _.reduce(coords, function (obj:CoordinateDelta, next:Coordinate) {
-        
-
-    //     return obj;
-
-    // }, { dx:null, dy:null });
-
-    return {
-        dx: end.x - start.x,
-        dy: end.y - start.y
-    };
+    data.canvas.context.stroke();
 }
 
 function toggleTracker():void {

@@ -2,6 +2,7 @@ module.exports = {
  entry: {
      'build/public/carousel/carousel_swipe': './src/local/carousel/carousel_swipe.ts',
      'build/public/carousel/carousel_original': './src/local/carousel/carousel_original.ts',
+     'build/public/drawer/color_test': './src/local/drawer/color_test.ts',
  },
  output: {
    filename: '[name].js',

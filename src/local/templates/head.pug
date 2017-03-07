@@ -1,0 +1,12 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    base(href='/', target='_blank')
+
+    title My Site - #{pageTitle}
+    block styles
+        link(href="/public/main.css", rel="stylesheet")
+
+  body
+    block content

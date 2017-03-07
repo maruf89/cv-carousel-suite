@@ -1,53 +1,32 @@
 /// <reference path="../../../typings/index.d.ts" />
 
-export class CanvasZone implements canvas_zone {
-    public $elem:HTMLCanvasElement
-    public context:CanvasRenderingContext2D
 
-    public $video:HTMLVideoElement
-    private _zoneDistanceX:number // a decimal between 0 and 1 - if canvas is split up into fields left/right defines where the start/end zones are defined
-    private _leftZone:CoordDimen
-    private _rightZone:CoordDimen
+import {generateRGBA} from '../util/color';
 
-    constructor(canvas:HTMLCanvasElement, context:CanvasRenderingContext2D, video:HTMLVideoElement, zoneDistanceX:number) {
-        this.$elem = canvas;
-        this.context = context;
-        this.$video = video;
-        this._zoneDistanceX = zoneDistanceX;
+export class CanvasZone {
+    static drawZoneIndex:number = 11;
+    
+    private _context:CanvasRenderingContext2D;
+    private _coordDouble:CoordDouble;
+    private _zoneIndex:number;
+
+    constructor(context:CanvasRenderingContext2D, coordDouble:CoordDouble) {
+        this._context = context;
+        this._coordDouble = coordDouble;
+        this._zoneIndex = ++CanvasZone.drawZoneIndex;
+
+        this.drawZone();
     }
 
-    public drawZones() {
-        let halvedDistance:number = this._zoneDistanceX / 2; // split field in half
-        let zoneWidth:number = halvedDistance *  this.$elem.clientWidth;
-
-        this._leftZone = {
-            x: 0,
-            y: 0,
-            width: zoneWidth,
-            height:  this.$elem.clientHeight
-        };
-
-        this._rightZone = {
-            x:  this.$elem.clientWidth - zoneWidth,
-            y: 0,
-            width: zoneWidth,
-            height:  this.$elem.clientHeight
-        };
-
-        this.drawSingleZone(this._leftZone, "rgba(242,12,54,.25)");
-        this.drawSingleZone(this._rightZone, "rgba(44,122,4,.25)");
-    }
-
-    private drawSingleZone(zone:CoordDimen, color:string):void {
+    public drawZone():void {
         /* Draw coordinates on video overlay: */
-        this.context.beginPath();
-        this.context.lineWidth = 2;
-        this.context.fillStyle = color;
-        this.context.fillRect(
-            zone.x,
-            zone.y,
-            zone.width,
-            zone.height);
-        this.context.stroke();
+        this._context.beginPath();
+        this._context.fillStyle = generateRGBA(.25, this._zoneIndex, 1);
+        this._context.fillRect(
+            this._coordDouble.x1,
+            this._coordDouble.y1,
+            this._coordDouble.x2 - this._coordDouble.x1,
+            this._coordDouble.y2 - this._coordDouble.y1
+        );
     }
 }

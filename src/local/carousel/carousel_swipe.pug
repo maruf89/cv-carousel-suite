@@ -3,30 +3,56 @@ html(lang='en')
   head
     meta(charset='utf-8')
     base(href='/', target='_blank')
-    title Carousel Swipe
-    link(href="/public/main.css", rel="stylesheet")
 
-  body.p-carousel
-    h1(style="margin-left:5em") Carousel Swipe
+    block title
+    title My Site - #{pageTitle}
+    block styles
+        link(href="/public/main.css", rel="stylesheet")
 
-    video#videoStream.old-tracker-canvas.hidden
-    canvas#trackerCanvas.old-tracker-canvas
+  body
+    block content
 
-    button#stopButton.fixed-top-left(type="button") Toggle Video!
+block title
+  -var pageTitle = "Carousel Swipe"
 
-    #scrolling
+block content
+  .p-carousel
+      h1 Carousel Swipe
+
+      video#videoStream.old-tracker-canvas.hidden
+      canvas#trackerCanvas.old-tracker-canvas
+
+      button#stopButton.fixed-top-left(type="button") Toggle Video!
+
+      #scrolling
         ul#scrollContent
-            li Swipe
-            li Scroll
-            li Pigs
-            li with wings
-    
-    script(src='/public/thirdparty/compatibility.js')
-    script(src='/public/thirdparty/js-objectdetect/objectdetect.js')
-    //- script(src='/public/thirdparty/js-objectdetect/objectdetect.handopen.js')
-    //- script(src='/public/thirdparty/js-objectdetect/objectdetect.handfist.js')
-    script(src='/public/thirdparty/js-objectdetect/objectdetect.eye.js')
-    script(src='/public/thirdparty/jquery.js')
-    script(src='/public/thirdparty/itemslide/itemslide.js')
-    script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.12/jquery.mousewheel.min.js")
-    script(src='/public/carousel/carousel_swipe.js')
+          li Swipe
+          li Scroll
+          li Pigs
+          li with wings
+          li Swipe
+          li Scroll
+          li Pigs
+          li with wings
+          li Swipe
+          li Scroll
+          li Pigs
+          li with wings
+          li Swipe
+          li Scroll
+          li Pigs
+          li with wings
+          li Swipe
+          li Scroll
+          li Pigs
+          li with wings
+      
+  script(src='/public/thirdparty/compatibility.js')
+  script(src='/public/thirdparty/js-objectdetect/objectdetect.js')
+  //- script(src='/public/thirdparty/js-objectdetect/objectdetect.handopen.js')
+  script(src='/public/thirdparty/js-objectdetect/objectdetect.handfist.js')
+  //- script(src='/public/thirdparty/js-objectdetect/objectdetect.eye.js')
+  script(src='/public/thirdparty/jquery.js')
+  script(src='/public/thirdparty/itemslide/itemslide.js')
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.12/jquery.mousewheel.min.js")
+  script(src='/public/carousel/carousel_swipe.js')

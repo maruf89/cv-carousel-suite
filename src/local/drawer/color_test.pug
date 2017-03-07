@@ -1,0 +1,40 @@
+doctype html
+html(lang='en')
+    head
+        meta(charset='utf-8')
+        base(href='/', target='_blank')
+
+        block title
+        title My Site - #{pageTitle}
+        block styles
+            link(href="/public/main.css", rel="stylesheet")
+
+    body
+        block content
+
+block title
+    -var pageTitle = "Color Drawer"
+
+block content
+    h1 Color Drawer
+    .full-width.p-color-drawer
+
+        .canvas-container
+            canvas#canvas16.drawing-board(data-frequency=".05")
+            canvas#canvas1.drawing-board(data-frequency=".1")
+            canvas#canvas13.drawing-board(data-frequency=".15")
+            canvas#canvas14.drawing-board(data-frequency=".2")
+            canvas#canvas15.drawing-board(data-frequency=".25")
+            canvas#canvas2.drawing-board(data-frequency=".3")
+            canvas#canvas3.drawing-board(data-frequency=".375")
+            canvas#canvas4.drawing-board(data-frequency="5")
+            canvas#canvas5.drawing-board(data-frequency=".75")
+            canvas#canvas6.drawing-board(data-frequency=".875")
+            canvas#canvas7.drawing-board(data-frequency="1")
+            canvas#canvas8.drawing-board(data-frequency="1.25")
+            canvas#canvas9.drawing-board(data-frequency="1.375")
+            canvas#canvas12.drawing-board(data-frequency="1.4")
+            canvas#canvas10.drawing-board(data-frequency="1.425")
+            canvas#canvas11.drawing-board(data-frequency="1.5")
+      
+    script(src='/public/drawer/color_test.js')
