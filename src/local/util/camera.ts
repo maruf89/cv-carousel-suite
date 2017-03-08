@@ -1,9 +1,9 @@
 import {Promise} from 'bluebird';
 
-export function loadCamera(video:HTMLVideoElement) {
+export function LoadCamera(video:HTMLVideoElement):Promise<MediaStream> {
     return new Promise(function (resolve, reject) {
         try {
-            compatibility.getUserMedia({video: true}, function(stream:any) {
+            compatibility.getUserMedia({video: true}, function(stream:MediaStream) {
                 try {
                     video.src = compatibility.URL.createObjectURL(stream);
                 } catch (error) {
