@@ -25,7 +25,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
     }
     
     constructor(canvasDimensions:CoordDimen, options?:TaskBucketOptions) {
-        this.trackDimens = canvasDimensions || this.trackDimens;
+        this.updateTrackerDimens(canvasDimensions);
     }
 
     public addNewFormula(formula:task_formula):void {
@@ -135,5 +135,9 @@ export class TaskBucketKeeper implements task_bucket_keeper {
                 formula.canvasZone.drawZone();
             }
         }
+    }
+
+    public updateTrackerDimens(dimens:CoordDimen):void {
+        this.trackDimens = dimens || this.trackDimens
     }
 }

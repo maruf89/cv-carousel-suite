@@ -16,7 +16,7 @@ export class TaskTracker implements task_tracker {
             x: 25,
             y: 0
         },
-        maxDecay: 10,
+        maxDecay: 25,
     }
 
     // how confident we are that we'll make it to the end
