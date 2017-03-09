@@ -24,7 +24,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
         height: 0
     }
     
-    constructor(canvasDimensions:CoordDimen, options?:TaskBucketOptions) {
+    constructor(canvasDimensions:CoordDimen) {
         this.updateTrackerDimens(canvasDimensions);
     }
 

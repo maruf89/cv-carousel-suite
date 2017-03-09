@@ -9,7 +9,7 @@
         "noImplicitAny": false,
         "forceConsistentCasingInFileNames": true,
         "baseUrl": "./",
-        "allowJs": false,
+        "allowJs": true,
         "paths": {
             "src/local/*": ["./src/local/*"]
         },

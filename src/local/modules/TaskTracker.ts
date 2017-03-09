@@ -12,11 +12,11 @@ export class TaskTracker implements task_tracker {
 
     private _options:TaskTrackerOptions = {
         scannerConstructor: null,
-        distThresh: {
+        relatedDistThresh: {
             x: 25,
             y: 0
         },
-        maxDecay: 25,
+        initialLife: 25,
     }
 
     // how confident we are that we'll make it to the end
@@ -43,6 +43,8 @@ export class TaskTracker implements task_tracker {
         trackerDimens:CoordDimen,
         options:TaskTrackerOptions
     ) {
+        this._checkHasNeededArgs(options, true);
+        
         // plant the seed…
         this.growNutrients(startCoord);
 
@@ -86,7 +88,7 @@ export class TaskTracker implements task_tracker {
         let prevCoord:Coordinate = this._history[0];
 
         // this is the max distance that the coordinates could match from
-        let distThresh:Coordinate = this._options.distThresh;
+        let distThresh:Coordinate = this._options.relatedDistThresh;
 
         // whether this is a neighboring center coordinate
         let withinTrajectory:boolean = (!distThresh.x || Math.abs(centerCoord.x - prevCoord.x) <= distThresh.x) &&
@@ -126,7 +128,7 @@ export class TaskTracker implements task_tracker {
         this.decayAmt++
 
         // if it hasn't decayed enough continue…
-        if (this.decayAmt < this._options.maxDecay) return false;
+        if (this.decayAmt < this._options.initialLife) return false;
         
         // otherwise subtract confidence
         this._confidence--;
@@ -137,6 +139,22 @@ export class TaskTracker implements task_tracker {
 
     public historyToString():string {
         return JSON.stringify(this._history);
+    }
+
+    /**
+     * Throw if invalid arguments passed in
+     * 
+     * @param options
+     * @param throwIfError 
+     */
+    private _checkHasNeededArgs(options:TaskTrackerOptions, throwIfError:boolean):boolean {
+        let invalid:boolean = !options || typeof options.scannerConstructor !== 'function';
+
+        if (invalid && throwIfError) {
+            throw new Error('Missing required options arguments for TaskTracker');
+        }
+
+        return !invalid;
     }
 
     /**
