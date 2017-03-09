@@ -1,46 +1,68 @@
 /// <reference path="../../../typings/index.d.ts" />
 
+import '../../thirdparty/compatibility';
+import '../../thirdparty/js-objectdetect/objectdetect.js';
+import '../../thirdparty/js-objectdetect/objectdetect.handfist.js';
+import '../../thirdparty/jquery.js';
+import '../../thirdparty/itemslide/itemslide.js';
+
 import {$id} from '../util/domSelector';
 import {CanvasZone} from '../modules/CanvasZone';
 import {TaskFormula} from '../modules/TaskFormula';
+import {Scanner} from "../modules/Scanner";
 import DetectorPlayer from '../modules/DetectorPlayer';
+import Carousel from '../modules/Carousel';
 import * as _ from 'lodash';
 
 window._debug = true;
 
-var pageCarousel:any;
-
+var pageCarousel:ICarousel;
 var Player:detector_player;
 
-const trackerOptions:any = {
-    zoneDistanceX: .75, // where the start/end trigger zones should start from the right & left edges
+
+const X_AXIS_DRAW_POSITION:number = .5;
+
+const detectorPlayerOptions:DetectorPlayerOptions = {
+    trackingOptions: {
+        initialLife: 50,
+        relatedDistThresh: {
+            x: 15,
+            y: 15
+        },
+        scannerConstructor: Scanner
+    },
+
+    drawDetectors: true,
+
+    canvasRestraints: {
+        x: 0,
+        y: 0,
+        width: 133,
+        height: 100
+    }
 }
 
-const canvasRestraints:CoordDimen = {
-    x: 0,
-    y: 0,
-    width: 133,
-    height: 100
-};
-
 window.onload = function () {
-    startCarousel();
+    let uiCarousel:any = jQuery('#scrollContent');
 
+    uiCarousel.itemslide({});
+
+    jQuery(window).resize(function () {
+        uiCarousel.reload();
+    });
+
+    pageCarousel = new Carousel(uiCarousel);
+
+    // bind toggle button
     $id('stopButton').addEventListener('click', toggleTracker);
 }
 
-function startCarousel () {
-    pageCarousel = $("ul");
-
-    pageCarousel.itemslide({});
-
-    $(window).resize(function () {
-        pageCarousel.reload();
-    });
-}
-
-function startCamera () {
-    Player = new DetectorPlayer(<HTMLVideoElement>$id('videoStream'), <HTMLCanvasElement>$id('trackerCanvas'), canvasRestraints);
+function loadTracker () {
+    Player = new DetectorPlayer(
+        <HTMLVideoElement>$id('videoStream'),
+        <HTMLCanvasElement>$id('trackerCanvas'),
+        detectorPlayerOptions
+    );
 
     Player.initCamera().then(function (bucket:task_bucket_keeper) {
         defineTaskBucketZones(bucket, Player.canvas, Player.context, Player.video);
@@ -53,9 +75,7 @@ function startCamera () {
  * Business Logic - defines bucket watch trigger zones
  */
 function defineTaskBucketZones(bucket:task_bucket_keeper, $canvas:HTMLCanvasElement, context:CanvasRenderingContext2D, $video:HTMLVideoElement):void {
-    let halvedDistance:number = trackerOptions.zoneDistanceX / 2; // split field in half
-
-    let carousel:Carousel = new Carousel(pageCarousel);
+    let halvedDistance:number = X_AXIS_DRAW_POSITION / 2; // split field in half
 
     let leftSide:ScannerDimen = {
         x: 0,
@@ -76,11 +96,11 @@ function defineTaskBucketZones(bucket:task_bucket_keeper, $canvas:HTMLCanvasElem
     let formula:task_formula = new TaskFormula({
         trigger: leftSide,
         followTriggers: [rightSide],
-        restraints: canvasRestraints,
+        restraints: detectorPlayerOptions.canvasRestraints,
         name: 'Left TOO Right',
         onComplete: function (formula:task_formula, tracker:task_tracker) {
             log(formula, tracker);
-            carousel.next();
+            pageCarousel.next();
         }
     });
 
@@ -90,12 +110,12 @@ function defineTaskBucketZones(bucket:task_bucket_keeper, $canvas:HTMLCanvasElem
     formula = new TaskFormula({
         trigger: rightSide,
         followTriggers: [leftSide],
-        restraints: canvasRestraints,
+        restraints: detectorPlayerOptions.canvasRestraints,
         name: 'Right -> 2 -> Left',
         onComplete: function (formula:task_formula, tracker:task_tracker) {
             console.log('scroll left');
             log(formula, tracker);
-            carousel.previous();
+            pageCarousel.previous();
         }
     });
 
@@ -107,54 +127,9 @@ function defineTaskBucketZones(bucket:task_bucket_keeper, $canvas:HTMLCanvasElem
     }
 }
 
-class Carousel {
-    private _carousel:any;
-    private _canCall:boolean = true;
-    
-    private _options:any = {
-        countdownBeforeReady: 1000,
-    }
-
-    constructor(carousel:any) {
-        this._carousel = carousel;
-    }
-
-    public next():void {
-        if (this._canCall) {
-            this._next();
-        }
-    }
-
-    public previous():void {
-        if (this._canCall) {
-            this._previous();
-        }
-    }
-
-    private _callAction():void {
-        let that = this;
-        this._canCall = false;
-
-        setTimeout(function () {
-            that._canCall = true;
-        }, this._options.countdownBeforeReady);
-    }
-
-    private _next():void {
-        this._callAction();
-        this._carousel.next();
-    }
-
-    private _previous():void {
-        this._callAction();
-        this._carousel.previous();
-    }
-}
-
-
 function toggleTracker():void {
     if (!Player) {
-        return startCamera();
+        return loadTracker();
     }
 
     Player.toggleTracking();

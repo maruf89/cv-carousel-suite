@@ -60,6 +60,9 @@ gulp.task('clean', function () {
     gulp.src(p(SRC, STYLES, GENERATED_FILES))
         .pipe(clean({force: true}))
 
+    gulp.src(p(SRC, STYLES, GENERATED_FILES))
+        .pipe(clean({force: true}))
+
     return gulp.src(BUILD)
         .pipe(clean({force: true}));
 });
@@ -97,7 +100,6 @@ gulp.task('watch', function() {
 });
 
 gulp.task('webserver', function() {
-
     return gulp.src(BUILD)
         .pipe(webserver({
             livereload: true,
@@ -138,4 +140,8 @@ gulp.task('dev', function () {
         'stylus',
         ['watch', 'webserver']
     )
+});
+
+gulp.task('serve', function () {
+    runSequence('webserver');
 });

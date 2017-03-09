@@ -3,7 +3,7 @@
  * not conforming to the latest standard (yet). Supported Browsers are: 
  * Chrome, Opera and Firefox (soon).
  */
-var compatibility = (function() {
+window.compatibility = (function() {
 	var lastTime = 0,
 	
 		URL = window.URL || window.webkitURL,

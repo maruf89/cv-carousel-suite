@@ -25,26 +25,42 @@ export default class DetectorPlayer implements detector_player {
     private _loopClosure:() => void
     private _detector:any;
 
+    private _taskColorIndex = 0;
+
     private _video:any = {
         width: 0,
         height: 0,
         stream: null
     };
 
-    private _options:TrackingOptions = {
-        historyLength: 10,
-        minConfidence: .3,
-        relatedBoxDistance: 25,
-        zoneDistance: .75, // where the start/end trigger zones should start from the right & left edges
-        taskColorIndex: 0,
+    // default extendable values
+    private _options:DetectorPlayerOptions = {
+        canvasRestraints: null,
+
+        drawDetectors: true,
+        log: true,
+
+        trackingOptions: {
+            initialLife: 25,
+            scannerConstructor: Scanner,
+            relatedDistThresh: {
+                x: 15,
+                y: 15
+            },
+        },
+
     }
     
-    constructor(video:HTMLVideoElement, canvas:HTMLCanvasElement, canvasRestraints:CoordDimen) {
+    constructor(video:HTMLVideoElement, canvas:HTMLCanvasElement, options:DetectorPlayerOptions) {
         this.video = video;
         this.canvas = canvas;
         this.context = canvas.getContext('2d');
 
-        this.updateCanvasRestraints(canvasRestraints);
+        if (options.trackingOptions) {
+            _.merge(this._options, options);
+        }
+
+        this.updateCanvasRestraints(options.canvasRestraints);
     }
 
     public updateCanvasRestraints(canvasRestraints:CoordDimen):void {
@@ -72,13 +88,13 @@ export default class DetectorPlayer implements detector_player {
                 y: 0,
                 width: that.canvas.width,
                 height: that.canvas.height
-            }, { zoneGoalDistanceX: that._options.zoneDistance });
+            });
 
             that._bucket = bucket;
 
             that._ready = true;
 
-            return bucket;
+            return Promise.resolve(bucket);
         });
     }
 
@@ -120,28 +136,41 @@ export default class DetectorPlayer implements detector_player {
         for (let i = 0, length = detectedCoords.length; i < length; i++) {
             let tracker:task_tracker = this._bucket.trackCoordinate(arrayToCoordDimen(detectedCoords[i]), createTrackerFn);
 
-            if (tracker) {
+            if (tracker && this._options.drawDetectors) {
                 this._drawTracker(tracker);
             }
         }
 
         let decaying:task_tracker[] = this._bucket.decayAndGetDecaying();
         let that = this;
-        if (decaying) {
+        if (decaying && this._options.drawDetectors) {
             _.each(decaying, function (tracker:task_tracker) {
                 that._drawTracker(tracker);
             })
         }
     }
 
+    /**
+     * The function that creates the tracker.
+     * It passes any merged variables passed into this detector from this._options.trackingOptions
+     * 
+     * @param startCoords
+     * @param formula 
+     */
     private _createTaskTracker(startCoords:CoordDimen, formula:task_formula):task_tracker {
-        let tracker:task_tracker =  new TaskTracker(startCoords, formula, this._canvasRestraints, {
-            scannerConstructor: Scanner
-        });
+        let tracker:task_tracker =  new TaskTracker(
+            startCoords,
+            formula,
+            this._canvasRestraints,
+            this._options.trackingOptions
+        );
 
-        tracker.data.trackerColor = generateRGBA(this._bucket.getTrackerConfidencePercent(tracker), this._options.taskColorIndex++, 1);
+        tracker.data.trackerColor = generateRGBA(this._bucket.getTrackerConfidencePercent(tracker), this._taskColorIndex++, 1);
         tracker.data.isNew = 25;
-        console.log(`Creating new formula: ${formula.toString()}`);
+
+        if (this._options.log) {
+            console.log(`Creating new formula: ${formula.toString()}`);
+        }
 
         return tracker;
     }
@@ -169,6 +198,11 @@ export default class DetectorPlayer implements detector_player {
 
     public stopTracking():void {
         this._doRun = false;
+        
+        try {
+            this._video.stream.getTracks()[0].stop();
+        } catch (ignore) {}
+        
     }
 
     public toggleTracking():void {
@@ -176,12 +210,6 @@ export default class DetectorPlayer implements detector_player {
             throw new Error('DetectorPlayer must be instantiated first by calling #initCamera()')
         }
         
-        if (this._isRunning) {
-            this.stopTracking();
-            this._video.stream.getTracks()[0].stop();
-            return;
-        }
-
-        this.startTracking();
+        return this._isRunning ? this.stopTracking() : this.startTracking();
     }
 }
