@@ -59,6 +59,6 @@ typings/
 # dotenv environment variables file
 .env
 
-build
+/build
 
-src/styles/generated_files
+generated_files/
