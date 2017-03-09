@@ -19,6 +19,7 @@ window._debug = true;
 var pageCarousel:ICarousel;
 var Player:detector_player;
 
+
 const X_AXIS_DRAW_POSITION:number = .5;
 
 const detectorPlayerOptions:DetectorPlayerOptions = {

@@ -94,7 +94,7 @@ export default class DetectorPlayer implements detector_player {
 
             that._ready = true;
 
-            return bucket;
+            return Promise.resolve(bucket);
         });
     }
 
