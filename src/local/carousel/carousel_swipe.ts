@@ -13,7 +13,7 @@ var pageCarousel:any;
 var Player:detector_player;
 
 const trackerOptions:any = {
-    zoneDistanceX: .5, // where the start/end trigger zones should start from the right & left edges
+    zoneDistanceX: .75, // where the start/end trigger zones should start from the right & left edges
 }
 
 const canvasRestraints:CoordDimen = {
@@ -150,6 +150,7 @@ class Carousel {
         this._carousel.previous();
     }
 }
+
 
 function toggleTracker():void {
     if (!Player) {
