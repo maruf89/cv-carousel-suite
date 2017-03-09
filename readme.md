@@ -13,13 +13,18 @@ To install all the dependencies
 `npm install`
 
 To build script and start server
-`gulp dev`
+`npm start`
 
-Demo Carousel
+`gulp serve` - starts serving from the existing `/build` directory
+
+Demos
 -------
-found at (https://localhost:8000/local/carousel/carousel_swipe.html)[https://localhost:8000/local/carousel/carousel_swipe.html]
 
+Once the webserver has started you can go to
 
+**Carousel Swipe** found at [https://localhost:8000/local/carousel/carousel_swipe.html](https://localhost:8000/local/carousel/carousel_swipe.html)
+
+**Fun with Color & Sine** found at [https://localhost:8000/local/drawer/color_test.html](https://localhost:8000/local/drawer/color_test.html)
 
 To Develop
 -----------

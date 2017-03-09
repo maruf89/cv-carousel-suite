@@ -46,7 +46,7 @@ class ColorTest {
         for (let i:number = 0; i < this._opts.count; i++) {
             if (this._incrementCurser(cursor)) {
                 let colorOffset:number = i + (offset || 0);
-                let randomRGBA:string = generateRGBA(.5, colorOffset, this._opts.frequency);
+                let randomRGBA:string = generateRGBA(1, colorOffset, this._opts.frequency);
                 if (i == 202) console.log(randomRGBA);
                 this._drawSquare(cursor, randomRGBA);
             }
