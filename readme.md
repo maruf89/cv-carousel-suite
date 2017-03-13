@@ -9,7 +9,8 @@ You'll need installed:
 + nodejs
 + npm
 
-**Quick Start** go to where you want this repo installed and run `git clone git@github.com:maruf89/cv-carousel-suite.git && cd cv-carousel-suite && npm install && npm start`
+**Quick Start** go to where you want this repo installed and run
+`git clone git@github.com:maruf89/cv-carousel-suite.git && cd cv-carousel-suite && npm install && npm start`
 
 
 To install all the dependencies

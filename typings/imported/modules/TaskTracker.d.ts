@@ -1,4 +1,4 @@
-interface task_tracker {
+declare class TaskTracker {
     decayAmt:number
     data:any
     
@@ -13,7 +13,7 @@ interface task_tracker {
 
 interface TaskTrackerOptions {
     // A constructor for a scanner class to determine following trigger points
-    scannerConstructor: new (rule:ScannerDimen, trackerDimens:CoordDimen) => scanner
+    scannerConstructor: new (rule:ScannerDimen, trackerDimens:CoordDimen) => Scanner
 
     /**
      * an int representing how many px away a trackment must away from
@@ -31,8 +31,6 @@ interface TaskTrackerOptions {
      * it will need to have > 10 confidence to not be garbage collected
      */
     initialLife?:number
-
-    onCreate?:(tracker:task_tracker) => void
 
     // to allow storing misc data
     data?:any

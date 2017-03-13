@@ -11,7 +11,7 @@ import {LoadCamera} from '../util/camera';
 import {Promise} from 'bluebird';
 import * as _ from 'lodash';
 
-export default class DetectorPlayer implements detector_player {
+export default class DetectorPlayer {
 
     public video:HTMLVideoElement;
     public canvas:HTMLCanvasElement;
@@ -20,7 +20,7 @@ export default class DetectorPlayer implements detector_player {
     private _ready:boolean = false;
     private _doRun:boolean = false;
     private _isRunning:boolean = false;
-    private _bucket:task_bucket_keeper;
+    private _bucket:TaskBucketKeeper;
     private _canvasRestraints:CoordDimen;
     private _loopClosure:() => void
     private _detector:any;
@@ -56,8 +56,8 @@ export default class DetectorPlayer implements detector_player {
         this.canvas = canvas;
         this.context = canvas.getContext('2d');
 
-        if (options.trackingOptions) {
-            _.merge(this._options, options);
+        if (options) {
+            this._options = Util.extendOptions(options, this._options);
         }
 
         this.updateCanvasRestraints(options.canvasRestraints);
@@ -69,13 +69,13 @@ export default class DetectorPlayer implements detector_player {
         this._canvasRestraints = canvasRestraints;
     }
 
-    public initCamera():Promise<task_bucket_keeper> {
+    public initCamera():Promise<TaskBucketKeeper> {
         var that = this;
 
         return Promise.all([
             Util.promisifyEventListener(this.video, 'loadeddata'),
             LoadCamera(this.video)
-        ]).then(function (args):detector_player {
+        ]).then(function (args):DetectorPlayer {
             let video = that.video;
 
             that._video.stream = args[0];
@@ -83,7 +83,7 @@ export default class DetectorPlayer implements detector_player {
             that._video.height = video.videoHeight;
             that._video.ratio = video.videoWidth / video.videoHeight;
 
-            let bucket:task_bucket_keeper = new TaskBucketKeeper({
+            let bucket:TaskBucketKeeper = new TaskBucketKeeper({
                 x: 0,
                 y: 0,
                 width: that.canvas.width,
@@ -131,20 +131,20 @@ export default class DetectorPlayer implements detector_player {
         
         var detectedCoords:number[][] = this._detector.detect(this.video, 1);
         
-        let createTrackerFn:(startCoords:CoordDimen, formula:task_formula) => task_tracker = this._createTaskTracker.bind(this);
+        let createTrackerFn:(startCoords:CoordDimen, formula:TaskFormula) => TaskTracker = this._createTaskTracker.bind(this);
         
         for (let i = 0, length = detectedCoords.length; i < length; i++) {
-            let tracker:task_tracker = this._bucket.trackCoordinate(arrayToCoordDimen(detectedCoords[i]), createTrackerFn);
+            let tracker:TaskTracker = this._bucket.trackCoordinate(arrayToCoordDimen(detectedCoords[i]), createTrackerFn);
 
             if (tracker && this._options.drawDetectors) {
                 this._drawTracker(tracker);
             }
         }
 
-        let decaying:task_tracker[] = this._bucket.decayAndGetDecaying();
+        let decaying:TaskTracker[] = this._bucket.decayAndGetDecaying();
         let that = this;
         if (decaying && this._options.drawDetectors) {
-            _.each(decaying, function (tracker:task_tracker) {
+            _.each(decaying, function (tracker:TaskTracker) {
                 that._drawTracker(tracker);
             })
         }
@@ -157,8 +157,8 @@ export default class DetectorPlayer implements detector_player {
      * @param startCoords
      * @param formula 
      */
-    private _createTaskTracker(startCoords:CoordDimen, formula:task_formula):task_tracker {
-        let tracker:task_tracker =  new TaskTracker(
+    private _createTaskTracker(startCoords:Coordinate, formula:TaskFormula):TaskTracker {
+        let tracker:TaskTracker =  new TaskTracker(
             startCoords,
             formula,
             this._canvasRestraints,
@@ -175,7 +175,7 @@ export default class DetectorPlayer implements detector_player {
         return tracker;
     }
 
-    private _drawTracker(tracker:task_tracker):void {
+    private _drawTracker(tracker:TaskTracker):void {
         let sizeRadius:number = 10;
         let coord:Coordinate = tracker.getLastCoordinate();
 

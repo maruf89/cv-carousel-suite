@@ -4,8 +4,9 @@ import * as _ from 'lodash';
 
 import {generateRGBA} from '../util/color';
 import {coordDimenToCenterCoord} from '../util/coord';
+import Util from '../util/misc';
 
-export class TaskTracker implements task_tracker {
+export class TaskTracker {
 
     public decayAmt:number = 0;
     public data:any;
@@ -26,9 +27,10 @@ export class TaskTracker implements task_tracker {
     private _history:Coordinate[] = [];
 
     // will hold reference to scanner which will tell us if we've reached the goal zone
-    private _triggerScanner:scanner;
+    private _triggerScanner:Scanner;
+    private _targetRule:ScannerDimen;
 
-    private _formula:task_formula;
+    private _formula:TaskFormula;
 
     // future goals
     private _nextTasks:ScannerDimen[];
@@ -39,7 +41,7 @@ export class TaskTracker implements task_tracker {
     
     constructor(
         startCoord:Coordinate,
-        formula:task_formula,
+        formula:TaskFormula,
         trackerDimens:CoordDimen,
         options:TaskTrackerOptions
     ) {
@@ -55,14 +57,11 @@ export class TaskTracker implements task_tracker {
         this._trackerDimens = trackerDimens;
         
         // Fuse any options we passed along with the defaults
-        _.merge(this._options, options);
+        this._options = Util.extendOptions(options, this._options);
+        if (!options.relatedDistThresh.x) options.relatedDistThresh.x = trackerDimens.width;
+        if (!options.relatedDistThresh.y) options.relatedDistThresh.y = trackerDimens.height;
 
         this.data = options.data || {};
-
-        if (typeof options.onCreate === 'function') {
-            options.onCreate(this);
-            options.onCreate = null;
-        }
 
         // Set sights on our first goal zone! Where are we sailing?
         this._setNextTrigger();
@@ -91,8 +90,9 @@ export class TaskTracker implements task_tracker {
         let distThresh:Coordinate = this._options.relatedDistThresh;
 
         // whether this is a neighboring center coordinate
-        let withinTrajectory:boolean = (!distThresh.x || Math.abs(centerCoord.x - prevCoord.x) <= distThresh.x) &&
-                                       (!distThresh.y || Math.abs(centerCoord.y - prevCoord.y) <= distThresh.y);
+        let withinTrajectory:boolean =  this._triggerScanner.isCloserToTarget(centerCoord, prevCoord) &&
+                                        (Math.abs(centerCoord.x - prevCoord.x) <= distThresh.x) &&
+                                        (Math.abs(centerCoord.y - prevCoord.y) <= distThresh.y);
 
         return withinTrajectory;
     }
@@ -169,6 +169,7 @@ export class TaskTracker implements task_tracker {
 
         // Otherwise we'll create a scanner for the next goal zone
         this._triggerScanner = new this._options.scannerConstructor(this._nextTasks.shift(), this._trackerDimens);
+        this._targetRule = this._triggerScanner.getRule();
     }
 
     /**

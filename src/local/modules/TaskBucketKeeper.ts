@@ -5,10 +5,10 @@ import {Scanner} from "./Scanner";
 import {TaskTracker} from './TaskTracker';
 import {coordDimenToCenterCoord} from '../util/coord';
 
-export class TaskBucketKeeper implements task_bucket_keeper {
-    private _formulas:task_formula[] = [];
+export class TaskBucketKeeper {
+    private _formulas:TaskFormula[] = [];
     private _formulaLen:number = 0;
-    private _trackerBucket:task_tracker[] = [];
+    private _trackerBucket:TaskTracker[] = [];
 
     // an starting reference restraint that will increment
     // as a certain tasks' confidence goes above this starting amount
@@ -28,13 +28,13 @@ export class TaskBucketKeeper implements task_bucket_keeper {
         this.updateTrackerDimens(canvasDimensions);
     }
 
-    public addNewFormula(formula:task_formula):void {
+    public addNewFormula(formula:TaskFormula):void {
         this._formulas.push(formula);
         this._formulaLen++;
     }
 
-    public trackCoordinate(coord:CoordDimen, trackerCreator:(coord:CoordDimen, formula:task_formula) => task_tracker):task_tracker|null {
-        let matchedTracker:task_tracker = null;
+    public trackCoordinate(coord:CoordDimen, trackerCreator:(coord:Coordinate, formula:TaskFormula) => TaskTracker):TaskTracker|null {
+        let matchedTracker:TaskTracker = null;
         let that = this;
         let centerCoord:Coordinate = coordDimenToCenterCoord(coord);
 
@@ -43,7 +43,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
 
         // iterate over the existing trackers to see if we have one
         for (;j >= 0; j--) {
-            let tracker:task_tracker = this._trackerBucket[j];
+            let tracker:TaskTracker = this._trackerBucket[j];
 
             // quit tracking if they're completed
             if (tracker.isCompleted()) {
@@ -59,9 +59,9 @@ export class TaskBucketKeeper implements task_bucket_keeper {
 
         // if it didn't match any existing trackers, see if it matches a new starting point
         if (!matchedTracker) {
-            _.some(this._formulas, function doesMatchScanner (formula:task_formula) {
+            _.some(this._formulas, function doesMatchScanner (formula:TaskFormula) {
                 if (formula.testForNewTask(centerCoord)) {
-                    matchedTracker = trackerCreator(coord, formula);
+                    matchedTracker = trackerCreator(centerCoord, formula);
 
                     console.debug(centerCoord);
                     console.debug('creating tracker - scanner name:' + formula.getName());
@@ -101,13 +101,13 @@ export class TaskBucketKeeper implements task_bucket_keeper {
         }
     }
 
-    public decayAndGetDecaying():task_tracker[] {
+    public decayAndGetDecaying():TaskTracker[] {
         var len:number = this._trackerBucket.length;
 
         // check if we have anything to decay
         if (!len) return null;
 
-        let decaying:task_tracker[] = [];
+        let decaying:TaskTracker[] = [];
 
         for (let j:number = len - 1; j >= 0; j--) {
             // Rot the tracker and see if it dies
@@ -122,7 +122,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
         return decaying;
     }
 
-    public getTrackerConfidencePercent(tracker:task_tracker):number {
+    public getTrackerConfidencePercent(tracker:TaskTracker):number {
         let confidence = tracker.getConfidence();
 
         return Math.max(confidence / this._confidenceRoof, .5);
@@ -130,7 +130,7 @@ export class TaskBucketKeeper implements task_bucket_keeper {
 
     public drawTriggerZones():void {
         for (let i = 0; i < this._formulaLen; i++) {
-            let formula:task_formula = this._formulas[i];
+            let formula:TaskFormula = this._formulas[i];
             if (formula.canvasZone) {
                 formula.canvasZone.drawZone();
             }

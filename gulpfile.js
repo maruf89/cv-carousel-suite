@@ -49,13 +49,6 @@ gulp.task('default', function () {
         .pipe(gulp.dest(p(BUILD, PUBLIC)));
 });
 
-gulp.task('scripts', function() {
-    var tsResult = tsProject.src()
-        .pipe(tsProject());
-
-    return tsResult.js.pipe(gulp.dest(p(BUILD, PUBLIC)));
-});
-
 gulp.task('clean', function () {
     gulp.src(p(SRC, STYLES, GENERATED_FILES))
         .pipe(clean({force: true}))
@@ -90,7 +83,7 @@ gulp.task('views', function () {
 });
 
 gulp.task('watch', function() {
-    gulp.watch(LOCAL_SCRIPTS, ["webpack:build-dev"]);
+    gulp.watch(LOCAL_SCRIPTS, ["scripts"]);
     gulp.watch(p(SRC, LOCAL, ALL_FILES(_PUG)), ['views'])
 
     // copy Stylus to 
@@ -122,11 +115,11 @@ gulp.task('stylus', function () {
         .pipe(gulp.dest(p(BUILD, PUBLIC)))
 });
 
-gulp.task("webpack:build-dev", function(callback) {
+gulp.task("scripts", function(callback) {
 	// run webpack
 	devCompiler.run(function(err, stats) {
-		if(err) throw new gutil.PluginError("webpack:build-dev", err);
-		gutil.log("[webpack:build-dev]", stats.toString({
+		if(err) throw new gutil.PluginError("webpack", err);
+		gutil.log("[webpack]", stats.toString({
 			colors: true
 		}));
 		callback();
@@ -136,7 +129,7 @@ gulp.task("webpack:build-dev", function(callback) {
 gulp.task('dev', function () {
     runSequence(
         'clean',
-        ['copy', 'copy:css', 'views', "webpack:build-dev"],
+        ['copy', 'copy:css', 'views', "scripts"],
         'stylus',
         ['watch', 'webserver']
     )
