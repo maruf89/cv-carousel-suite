@@ -1,12 +1,14 @@
 declare class TaskTracker {
     decayAmt:number
+    lastInstructions:TrackInstructions
     data:any
     
     getLastCoordinate:() => Coordinate
-    matchesTrackerTrajectory:(coord:Coordinate) => boolean
-    growNutrients:(coord:Coordinate) => number
+    getInstructionsForCoord:(centerCoord:Coordinate) => TrackInstructions
+    isNearNeighbor:(coord:Coordinate) => boolean
+    appliedInstructions:() => void
+    growNutrients:(growth:number, coordCenter:Coordinate) => number
     decay:() => boolean
-    historyToString:() => string
     isCompleted:() => boolean
     getConfidence:() => number
 }
@@ -37,7 +39,6 @@ interface TaskTrackerOptions {
 }
 
 interface TrackingOptions {
-
     /**
      * where the start/end trigger zones should start from the right & left edges
      */
@@ -45,4 +46,16 @@ interface TrackingOptions {
 
     // internal usage
     _taskColorIndex?:number
+}
+
+type TrackerState = "growing" | "persisting" | "decaying" | "triggered" | "finished";
+
+declare class TrackInstructions {
+    coord:Coordinate
+    growth:number
+    state:TrackerState
+    alreadyApplied:boolean
+
+    applyMatches:(isNeighbor:boolean, towardsGoal:boolean) => void
+    isGrowing:() => boolean
 }

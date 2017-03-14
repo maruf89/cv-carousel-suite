@@ -12,6 +12,6 @@ declare class DetectorPlayer {
 interface DetectorPlayerOptions {
     canvasRestraints:CoordDimen
     trackingOptions?:TaskTrackerOptions
-    drawDetectors?:boolean
+    drawDetectors?:boolean // whether to draw detectors on the canvas
     log?:boolean
 }

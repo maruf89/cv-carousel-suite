@@ -69,7 +69,7 @@ export default class DetectorPlayer {
         this._canvasRestraints = canvasRestraints;
     }
 
-    public initCamera():Promise<TaskBucketKeeper> {
+    public initCamera(bucketKeeperOptions:TaskBucketKeeperOptions):Promise<TaskBucketKeeper> {
         var that = this;
 
         return Promise.all([
@@ -88,7 +88,7 @@ export default class DetectorPlayer {
                 y: 0,
                 width: that.canvas.width,
                 height: that.canvas.height
-            });
+            }, bucketKeeperOptions);
 
             that._bucket = bucket;
 
@@ -127,27 +127,20 @@ export default class DetectorPlayer {
         this.context.drawImage(this.video, 0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
 
         // draws the start trigger points
-        this._bucket.drawTriggerZones();
+        this._bucket.newCycle();
         
         var detectedCoords:number[][] = this._detector.detect(this.video, 1);
         
         let createTrackerFn:(startCoords:CoordDimen, formula:TaskFormula) => TaskTracker = this._createTaskTracker.bind(this);
         
         for (let i = 0, length = detectedCoords.length; i < length; i++) {
-            let tracker:TaskTracker = this._bucket.trackCoordinate(arrayToCoordDimen(detectedCoords[i]), createTrackerFn);
-
-            if (tracker && this._options.drawDetectors) {
-                this._drawTracker(tracker);
-            }
+            /**
+             * TODO convert to receive array of trackers, each with their own drawing instructions
+             */
+            this._bucket.trackCoordinate(arrayToCoordDimen(detectedCoords[i]), createTrackerFn);
         }
 
-        let decaying:TaskTracker[] = this._bucket.decayAndGetDecaying();
-        let that = this;
-        if (decaying && this._options.drawDetectors) {
-            _.each(decaying, function (tracker:TaskTracker) {
-                that._drawTracker(tracker);
-            })
-        }
+        this._processTrackers(this._bucket.cycleAndRetrieve());
     }
 
     /**
@@ -175,6 +168,19 @@ export default class DetectorPlayer {
         return tracker;
     }
 
+    private _processTrackers(trackers:TaskTracker[]):void {
+        if (this._options.drawDetectors) {
+            for (let i:number = 0, len:number = trackers.length; i < len; i++) {
+                let tracker:TaskTracker = trackers[i];
+                
+                this._drawTracker(tracker);
+            }
+            return;
+        } else {
+
+        }
+    }
+
     private _drawTracker(tracker:TaskTracker):void {
         let sizeRadius:number = 10;
         let coord:Coordinate = tracker.getLastCoordinate();
@@ -183,7 +189,7 @@ export default class DetectorPlayer {
         this.context.beginPath();
         this.context.lineWidth = 2;
 
-        if (typeof tracker.data.isNew === 'number' && --tracker.data.isNew <= 0) {
+        if (typeof tracker.data.isNew === 'number' && --tracker.data.isNew >= 0) {
             this.context.fillStyle = tracker.data.trackerColor
             this.context.fillRect(
                 (coord.x - sizeRadius),

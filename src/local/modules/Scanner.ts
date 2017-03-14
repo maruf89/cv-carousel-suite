@@ -72,6 +72,9 @@ export class Scanner {
         return this._trigger.name;
     }
 
+    /**
+     * Some quick variable setup that can be precalculated for {@link #isCloserToTarget} to run
+     */
     private _determineRuleXY():void {
         var xRule:number;
         var yRule:number;
@@ -107,6 +110,14 @@ export class Scanner {
         }
     }
 
+    /**
+     * This returns whether coordA is closer to this scanner's destination point.
+     * 
+     * (Depends on variables from {@link #_determineRuleXY} to be precalculated.)
+     * 
+     * @param coordA
+     * @param coordB 
+     */
     public isCloserToTarget(coordA:Coordinate, coordB:Coordinate):boolean {
         let coordADifX:number = 1;
         let coordADifY:number = 1;

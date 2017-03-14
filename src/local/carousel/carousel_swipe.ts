@@ -46,6 +46,10 @@ const detectorPlayerOptions:DetectorPlayerOptions = {
     }
 }
 
+const bucketKeeperOptions:TaskBucketKeeperOptions = {
+    completedTrackerAfterLife: 45
+};
+
 const trackerFormulaOptions:any = {
     xAxisDrawPosition: .5
 };
@@ -83,7 +87,7 @@ function loadTracker () {
         detectorPlayerOptions
     );
 
-    Player.initCamera().then(function (bucket:TaskBucketKeeper) {
+    Player.initCamera(bucketKeeperOptions).then(function (bucket:TaskBucketKeeper):void {
         defineTrackFormulas(bucket, Player.canvas, Player.context, Player.video);
 
         Player.toggleTracking();
@@ -142,7 +146,7 @@ function defineTrackFormulas(bucket:TaskBucketKeeper, $canvas:HTMLCanvasElement,
     bucket.addNewFormula(formula);
 
     function log(formula:TaskFormula, tracker:TaskTracker):void {
-        console.warn(`${formula.toString()} - ${tracker.historyToString()}`);
+        //console.warn(`${formula.toString()} - ${tracker.historyToString()}`);
     }
 }
 
